@@ -86,7 +86,6 @@ class ManageBillsActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val company = when (item.itemId) {
-            R.id.action_setup_lesco -> Company.LESCO
             R.id.action_setup_sngpl -> Company.SNGPL
             else -> null
         }
