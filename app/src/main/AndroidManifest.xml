@@ -29,6 +29,21 @@
             android:label="@string/manage_saved_numbers" />
 
         <activity
+            android:name=".ChooseModeActivity"
+            android:exported="false"
+            android:label="@string/app_name" />
+
+        <activity
+            android:name=".ChooseSavedBillActivity"
+            android:exported="false"
+            android:label="@string/check_saved" />
+
+        <activity
+            android:name=".ChooseManualCompanyActivity"
+            android:exported="false"
+            android:label="@string/check_manual" />
+
+        <activity
             android:name=".WebViewActivity"
             android:exported="false" />
 

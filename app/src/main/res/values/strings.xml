@@ -11,4 +11,6 @@
     <string name="save">Save</string>
     <string name="empty_state">No saved bills yet. Tap + to add one.</string>
     <string name="manage_saved_numbers">Manage saved numbers</string>
+    <string name="check_saved">Check My Bill (Saved)</string>
+    <string name="check_manual">Check Manually (Blank)</string>
 </resources>
