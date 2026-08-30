@@ -78,6 +78,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val manualCompany = when (item.itemId) {
+            R.id.action_manual_lesco -> Company.LESCO
+            R.id.action_manual_sngpl -> Company.SNGPL
+            else -> null
+        }
+        if (manualCompany != null) {
+            val intent = Intent(this, WebViewActivity::class.java).apply {
+                putExtra(WebViewActivity.EXTRA_MODE, WebViewActivity.MODE_MANUAL)
+                putExtra(WebViewActivity.EXTRA_COMPANY, manualCompany.name)
+                putExtra(WebViewActivity.EXTRA_LABEL, "${manualCompany.label} (manual)")
+            }
+            startActivity(intent)
+            return true
+        }
+
         val company = when (item.itemId) {
             R.id.action_setup_lesco -> Company.LESCO
             R.id.action_setup_sngpl -> Company.SNGPL
@@ -97,6 +112,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
             return true
         }
+
         return super.onOptionsItemSelected(item)
     }
 
