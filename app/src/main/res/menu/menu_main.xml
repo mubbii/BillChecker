@@ -2,19 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_setup_lesco"
-        android:title="Setup LESCO page"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/action_setup_sngpl"
         android:title="Setup SNGPL page"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_manual_lesco"
-        android:title="Check LESCO manually (blank form)"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_manual_sngpl"
-        android:title="Check SNGPL manually (blank form)"
         app:showAsAction="never" />
 </menu>

@@ -21,17 +21,20 @@ class WebViewActivity : AppCompatActivity() {
     private var number: String? = null
     private var secondaryId: String? = null
 
+    // Guarantees the fill-and-submit script only ever runs ONCE per screen,
+    // no matter how many times onPageFinished fires afterward (redirects,
+    // error pages that reuse the same form, etc). This is what stops the loop.
     private var autofillAttempted = false
 
     companion object {
         const val EXTRA_MODE = "mode"
         const val EXTRA_COMPANY = "company"
-        const val EXTRA_NUMBER = "number"
-        const val EXTRA_SECONDARY_ID = "secondaryId"
+        const val EXTRA_NUMBER = "number"           // Reference number, 4 dash-separated parts
+        const val EXTRA_SECONDARY_ID = "secondaryId" // Customer ID (LESCO)
         const val EXTRA_LABEL = "label"
         const val MODE_SETUP = "SETUP"
         const val MODE_CHECK = "CHECK"
-        const val MODE_MANUAL = "MANUAL"
+        const val MODE_MANUAL = "MANUAL" // Opens the same page blank - no autofill, anyone can type their own number
 
         const val LESCO_CHECKBILL_URL = "https://www.lesco.gov.pk/Modules/CustomerBillNC/CheckBill.asp"
     }
@@ -88,6 +91,14 @@ class WebViewActivity : AppCompatActivity() {
     private fun jsString(s: String): String =
         "'" + s.replace("\\", "\\\\").replace("'", "\\'") + "'"
 
+    /**
+     * refValue: 4 dash-separated parts - BatchNo-SubDiv-RefNo-Suffix
+     * custId: separate Customer ID value
+     *
+     * Fills BOTH sections on the page, but only auto-clicks the Customer ID
+     * section's "Customer Menu" button, since that's the path that reliably
+     * reaches the captcha page.
+     */
     private fun injectLescoAutofill(refValue: String, custId: String) {
         val parts = refValue.split("-").map { it.trim() }
         if (parts.size < 4) {
@@ -109,6 +120,7 @@ class WebViewActivity : AppCompatActivity() {
                 try {
                     var report = [];
 
+                    // Fill the reference-number section (form1) - visual only, not submitted.
                     var form1 = document.querySelector('form[name="form1"]');
                     if (form1) {
                         var batch = form1.querySelector('input[name="txtBatchNo"]');
@@ -139,6 +151,7 @@ class WebViewActivity : AppCompatActivity() {
                         report.push('form1_not_found');
                     }
 
+                    // Fill AND submit the Customer ID section (form2).
                     var form2 = document.querySelector('form[name="form2"]');
                     if (form2) {
                         var custIdField = form2.querySelector('input[name="txtCustID"]');

@@ -10,4 +10,5 @@
     <string name="hint_customer_id">e.g. 7423097</string>
     <string name="save">Save</string>
     <string name="empty_state">No saved bills yet. Tap + to add one.</string>
+    <string name="manage_saved_numbers">Manage saved numbers</string>
 </resources>

@@ -24,6 +24,11 @@
             android:label="@string/add_bill_title" />
 
         <activity
+            android:name=".ManageBillsActivity"
+            android:exported="false"
+            android:label="@string/manage_saved_numbers" />
+
+        <activity
             android:name=".WebViewActivity"
             android:exported="false" />
 
