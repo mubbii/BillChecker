@@ -21,22 +21,19 @@ class WebViewActivity : AppCompatActivity() {
     private var number: String? = null
     private var secondaryId: String? = null
 
-    // Guarantees the fill-and-submit script only ever runs ONCE per screen,
-    // no matter how many times onPageFinished fires afterward (redirects,
-    // error pages that reuse the same form, etc). This is what stops the loop.
     private var autofillAttempted = false
 
     companion object {
         const val EXTRA_MODE = "mode"
         const val EXTRA_COMPANY = "company"
-        const val EXTRA_NUMBER = "number"           // Reference number, 4 dash-separated parts
-        const val EXTRA_SECONDARY_ID = "secondaryId" // Customer ID (LESCO)
+        const val EXTRA_NUMBER = "number"
+        const val EXTRA_SECONDARY_ID = "secondaryId"
         const val EXTRA_LABEL = "label"
         const val MODE_SETUP = "SETUP"
         const val MODE_CHECK = "CHECK"
-        const val MODE_MANUAL = "MANUAL" // Opens the same page blank - no autofill, anyone can type their own number
+        const val MODE_MANUAL = "MANUAL"
 
-        const val LESCO_CHECKBILL_URL = "https://www.lesco.gov.pk/Modules/CustomerBillNC/CheckBill.asp"
+        const val LESCO_CHECKBILL_URL = "https://bill.pitc.com.pk/lescobill"
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -61,9 +58,12 @@ class WebViewActivity : AppCompatActivity() {
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                if (mode == MODE_CHECK && company == Company.LESCO && !number.isNullOrBlank() && !autofillAttempted) {
+                if (mode == MODE_CHECK && !number.isNullOrBlank() && !autofillAttempted) {
                     autofillAttempted = true
-                    injectLescoAutofill(number!!, secondaryId ?: "")
+                    when (company) {
+                        Company.LESCO -> injectLescoAutofill(number!!, secondaryId ?: "")
+                        Company.SNGPL -> injectSngplAutofill(number!!)
+                    }
                 }
             }
         }
@@ -92,85 +92,47 @@ class WebViewActivity : AppCompatActivity() {
         "'" + s.replace("\\", "\\\\").replace("'", "\\'") + "'"
 
     /**
-     * refValue: 4 dash-separated parts - BatchNo-SubDiv-RefNo-Suffix
-     * custId: separate Customer ID value
+     * bill.pitc.com.pk/lescobill: a single #searchTextBox field (defaults to
+     * "Reference No" mode, already selected), a #ruCodeTextBox suffix
+     * dropdown ("U" = empty value, "R" = "R"), and a #btnSearch submit
+     * button - no captcha, one page, done.
      *
-     * Fills BOTH sections on the page, but only auto-clicks the Customer ID
-     * section's "Customer Menu" button, since that's the path that reliably
-     * reaches the captcha page.
+     * refValue format: RefNo or RefNo-Suffix (suffix optional, defaults to U)
+     * e.g. "1234567890" or "1234567890-R"
      */
     private fun injectLescoAutofill(refValue: String, custId: String) {
         val parts = refValue.split("-").map { it.trim() }
-        if (parts.size < 4) {
-            Toast.makeText(
-                this,
-                "Reference number needs 4 dash-separated parts: BatchNo-SubDiv-RefNo-Suffix",
-                Toast.LENGTH_LONG
-            ).show()
+        val refNo = parts[0]
+        val suffix = if (parts.size > 1 && parts[1].isNotBlank()) parts[1] else "U"
+
+        if (refNo.isBlank()) {
+            Toast.makeText(this, "Reference number is empty", Toast.LENGTH_LONG).show()
             return
         }
-        val p1 = jsString(parts[0])
-        val p2 = jsString(parts[1])
-        val p3 = jsString(parts[2])
-        val suffix = jsString(parts[3])
-        val custIdJs = jsString(custId)
+
+        val refNoJs = jsString(refNo)
+        val suffixIsR = suffix.equals("R", ignoreCase = true)
 
         val js = """
             (function() {
                 try {
-                    var report = [];
+                    var input = document.getElementById('searchTextBox');
+                    var select = document.getElementById('ruCodeTextBox');
+                    var btn = document.getElementById('btnSearch');
+                    if (!input || !btn) {
+                        return 'FIELDS_MISSING input=' + !!input + ' btn=' + !!btn;
+                    }
+                    input.value = $refNoJs;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
 
-                    // Fill the reference-number section (form1) - visual only, not submitted.
-                    var form1 = document.querySelector('form[name="form1"]');
-                    if (form1) {
-                        var batch = form1.querySelector('input[name="txtBatchNo"]');
-                        var sub = form1.querySelector('input[name="txtSubDiv"]');
-                        var ref = form1.querySelector('input[name="txtRefNo"]');
-                        var select = form1.querySelector('select[name="cmbRU"]');
-                        if (batch && sub && ref && select) {
-                            batch.value = $p1;
-                            sub.value = $p2;
-                            ref.value = $p3;
-                            [batch, sub, ref].forEach(function(el) {
-                                el.dispatchEvent(new Event('input', { bubbles: true }));
-                                el.dispatchEvent(new Event('change', { bubbles: true }));
-                            });
-                            var suffixVal = $suffix;
-                            for (var i = 0; i < select.options.length; i++) {
-                                if (select.options[i].value === suffixVal) {
-                                    select.selectedIndex = i;
-                                    break;
-                                }
-                            }
-                            select.dispatchEvent(new Event('change', { bubbles: true }));
-                            report.push('form1_filled');
-                        } else {
-                            report.push('form1_fields_missing');
-                        }
-                    } else {
-                        report.push('form1_not_found');
+                    if (select) {
+                        select.value = $suffixIsR ? 'R' : '';
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
                     }
 
-                    // Fill AND submit the Customer ID section (form2).
-                    var form2 = document.querySelector('form[name="form2"]');
-                    if (form2) {
-                        var custIdField = form2.querySelector('input[name="txtCustID"]');
-                        var btn2 = form2.querySelector('input[name="btnViewMenu"]');
-                        if (custIdField && btn2) {
-                            custIdField.value = $custIdJs;
-                            custIdField.dispatchEvent(new Event('input', { bubbles: true }));
-                            custIdField.dispatchEvent(new Event('change', { bubbles: true }));
-                            report.push('form2_filled');
-                            btn2.click();
-                            report.push('form2_submitted');
-                        } else {
-                            report.push('form2_fields_missing');
-                        }
-                    } else {
-                        report.push('form2_not_found');
-                    }
-
-                    return report.join(' | ');
+                    btn.click();
+                    return 'SUBMITTED';
                 } catch (e) {
                     return 'ERROR: ' + e.message;
                 }
@@ -179,7 +141,47 @@ class WebViewActivity : AppCompatActivity() {
 
         webView.evaluateJavascript(js) { result ->
             val clean = result?.trim('"') ?: "null"
-            if (!clean.contains("form2_submitted")) {
+            if (!clean.contains("SUBMITTED")) {
+                Toast.makeText(this, clean, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    /**
+     * sngpl-bill.pk: a single #gbConsumer input and a #gbBtn button that
+     * calls the page's own window.gbFetchBill() function - no captcha,
+     * so this fully completes the check with no manual step left over.
+     */
+    private fun injectSngplAutofill(consumerNumber: String) {
+        val value = jsString(consumerNumber)
+
+        val js = """
+            (function() {
+                try {
+                    var input = document.getElementById('gbConsumer');
+                    if (!input) return 'INPUT_NOT_FOUND';
+                    input.value = $value;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    if (typeof window.gbFetchBill === 'function') {
+                        window.gbFetchBill();
+                        return 'SUBMITTED';
+                    }
+                    var btn = document.getElementById('gbBtn');
+                    if (btn) {
+                        btn.click();
+                        return 'SUBMITTED_VIA_BUTTON';
+                    }
+                    return 'BUTTON_NOT_FOUND';
+                } catch (e) {
+                    return 'ERROR: ' + e.message;
+                }
+            })();
+        """.trimIndent()
+
+        webView.evaluateJavascript(js) { result ->
+            val clean = result?.trim('"') ?: "null"
+            if (!clean.contains("SUBMITTED")) {
                 Toast.makeText(this, clean, Toast.LENGTH_LONG).show()
             }
         }

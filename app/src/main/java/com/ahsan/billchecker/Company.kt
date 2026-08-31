@@ -9,7 +9,7 @@ package com.ahsan.billchecker
  */
 enum class Company(val label: String, val defaultUrl: String) {
     LESCO("LESCO (Electricity)", "https://www.lesco.gov.pk/"),
-    SNGPL("SNGPL (Sui Gas)", "https://www.sngpl.com.pk/");
+    SNGPL("SNGPL (Sui Gas)", "https://sngpl-bill.pk/");
 
     companion object {
         fun fromName(name: String): Company =

@@ -46,16 +46,6 @@ class AddBillActivity : AppCompatActivity() {
                 numberEdit.error = "Enter the consumer / reference number"
                 return@setOnClickListener
             }
-            if (company == Company.LESCO) {
-                if (number.split("-").size < 4) {
-                    numberEdit.error = "Use the 4-part format (BatchNo-SubDiv-RefNo-Suffix), e.g. 14-11551-141155120-U"
-                    return@setOnClickListener
-                }
-                if (customerId.isEmpty()) {
-                    customerIdEdit.error = "Enter your Customer ID"
-                    return@setOnClickListener
-                }
-            }
             val finalLabel = if (label.isEmpty()) company.label else label
 
             Storage.addBill(this, finalLabel, company, number, customerId)
@@ -72,9 +62,9 @@ class AddBillActivity : AppCompatActivity() {
     ) {
         when (company) {
             Company.LESCO -> {
-                numberEdit.hint = "e.g. 14-11551-141155120-U (batch-subdiv-ref-suffix)"
-                customerIdLabel.visibility = View.VISIBLE
-                customerIdEdit.visibility = View.VISIBLE
+                numberEdit.hint = "e.g. 1234567890 (add -R at the end only if your bill uses R, otherwise leave as-is for default U)"
+                customerIdLabel.visibility = View.GONE
+                customerIdEdit.visibility = View.GONE
             }
             Company.SNGPL -> {
                 numberEdit.hint = "As printed on your bill"
