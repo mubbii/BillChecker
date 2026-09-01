@@ -44,6 +44,11 @@
             android:label="@string/check_manual" />
 
         <activity
+            android:name=".EmergencyNumbersActivity"
+            android:exported="false"
+            android:label="@string/emergency_numbers" />
+
+        <activity
             android:name=".WebViewActivity"
             android:exported="false" />
 

@@ -13,4 +13,6 @@
     <string name="manage_saved_numbers">Manage saved numbers</string>
     <string name="check_saved">Check My Bill (Saved)</string>
     <string name="check_manual">Check Manually (Blank)</string>
+    <string name="emergency_numbers">Emergency Numbers</string>
+    <string name="emergency_numbers_footnote">Lahore-specific numbers, sourced from the official Lahore Police Emergency Help Directory. Tap a card to open the dialer.</string>
 </resources>

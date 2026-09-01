@@ -17,5 +17,8 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.buttonManage).setOnClickListener {
             startActivity(Intent(this, ManageBillsActivity::class.java))
         }
+        findViewById<Button>(R.id.buttonEmergency).setOnClickListener {
+            startActivity(Intent(this, EmergencyNumbersActivity::class.java))
+        }
     }
 }

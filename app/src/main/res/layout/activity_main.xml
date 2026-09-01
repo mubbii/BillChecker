@@ -28,4 +28,12 @@
         android:layout_marginTop="12dp"
         android:text="@string/manage_saved_numbers" />
 
+    <Button
+        android:id="@+id/buttonEmergency"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="220dp"
+        android:layout_marginTop="12dp"
+        android:text="@string/emergency_numbers" />
+
 </LinearLayout>
